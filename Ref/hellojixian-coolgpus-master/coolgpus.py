@@ -1,0 +1,279 @@
+#!/usr/bin/env python3
+import os
+import re
+import time
+import argparse
+from subprocess import TimeoutExpired, check_output, Popen, PIPE, STDOUT
+from tempfile import mkdtemp
+from contextlib import contextmanager
+
+parser = argparse.ArgumentParser(description=r'''
+GPU fan control for Linux.
+
+By default, this uses a clamped linear fan curve, going from 30% below 55C to 99%
+above 80C. There's also a small hysteresis gap, because _changes_ in fan noise
+are a lot more distracting than steady fan noise.
+
+I can't claim it's optimal, but it Works For My Machine (TM). Full load is about
+75C and 80%.
+''')
+parser.add_argument('--temp', nargs='+', default=[55, 80], type=float, help='The temperature ranges where the fan speed will increase linearly')
+parser.add_argument('--speed', nargs='+', default=[30, 99], type=float, help='The fan speed ranges')
+parser.add_argument('--hyst', nargs='?', default=2, type=float, help='The hysteresis gap. Large gaps will reduce how often the fan speed is changed, but might mean the fan runs faster than necessary')
+parser.add_argument('--kill', action='store_true', default=False, help='Whether to kill existing Xorg sessions')
+parser.add_argument('--verbose', action='store_true', default=False, help='Whether to print extra debugging information')
+parser.add_argument('--debug', action='store_true', default=False, help='Whether to only start the Xorg subprocesses, and not actually alter the fan speed. This can be useful for debugging.')
+args = parser.parse_args()
+
+T_HYST =  args.hyst
+
+assert len(args.temp) == len(args.speed), 'temp and speed should have the same length'
+assert len(args.temp) >= 2, 'Please use at least two points for temp'
+assert len(args.speed) >= 2, 'Please use at least two points for speed'
+
+# EDID for an arbitrary display
+EDID = b'\x00\xff\xff\xff\xff\xff\xff\x00\x10\xac\x15\xf0LTA5.\x13\x01\x03\x804 x\xee\x1e\xc5\xaeO4\xb1&\x0ePT\xa5K\x00\x81\x80\xa9@\xd1\x00qO\x01\x01\x01\x01\x01\x01\x01\x01(<\x80\xa0p\xb0#@0 6\x00\x06D!\x00\x00\x1a\x00\x00\x00\xff\x00C592M9B95ATL\n\x00\x00\x00\xfc\x00DELL U2410\n  \x00\x00\x00\xfd\x008L\x1eQ\x11\x00\n      \x00\x1d'
+
+# X conf for a single screen server with fake CRT attached
+XORG_CONF = """Section "ServerLayout"
+    Identifier     "Layout0"
+    Screen      0  "Screen0"     0    0
+EndSection
+
+Section "Screen"
+    Identifier     "Screen0"
+    Device         "VideoCard0"
+    Monitor        "Monitor0"
+    DefaultDepth   8
+    Option         "UseDisplayDevice" "DFP-0"
+    Option         "ConnectedMonitor" "DFP-0"
+    Option         "CustomEDID" "DFP-0:{edid}"
+    Option         "Coolbits" "20"
+    SubSection "Display"
+                Depth   8
+                Modes   "160x200"
+    EndSubSection
+EndSection
+
+Section "ServerFlags"
+    Option         "AllowEmptyInput" "on"
+    Option         "Xinerama"        "off"
+    Option         "SELinux"         "off"
+EndSection
+
+Section "Device"
+    Identifier  "Videocard0"
+    Driver      "nvidia"
+        Screen      0
+        Option      "UseDisplayDevice" "DFP-0"
+        Option      "ConnectedMonitor" "DFP-0"
+        Option      "CustomEDID" "DFP-0:{edid}"
+        Option      "Coolbits" "29"
+        BusID       "PCI:{bus}"
+EndSection
+
+Section "Monitor"
+    Identifier      "Monitor0"
+    Vendorname      "Dummy Display"
+    Modelname       "160x200"
+    #Modelname       "1024x768"
+EndSection
+"""
+
+def log_output(command, ok=(0,)):
+    output = []
+    if args.verbose:
+        print('Command launched: ' + ' '.join(command))
+    p = Popen(command, stdout=PIPE, stderr=STDOUT)
+    try:
+        p.wait(60)
+        for line in p.stdout:
+            output.append(line.decode().strip())
+            if args.verbose:
+                print(line.decode().strip())
+        if args.verbose:
+            print('Command finished')
+    except TimeoutExpired:
+        print('Command timed out: ' + ' '.join(command))
+        raise
+    finally:
+        if p.returncode not in ok:
+            print('\n'.join(output))
+            raise ValueError('Command crashed with return code ' + str(p.returncode) + ': ' + ' '.join(command))
+        return '\n'.join(output)
+
+def decimalize(bus):
+    """Converts a bus ID to an xconf-friendly format by dropping the domain and converting each hex component to
+    decimal"""
+    return ':'.join([str(int('0x' + p, 16)) for p in re.split('[:.]', bus[9:])])
+
+def gpu_buses():
+    return log_output(['nvidia-smi', '--format=csv,noheader', '--query-gpu=pci.bus_id']).splitlines()
+
+def query(bus, field):
+    [line] = log_output(['nvidia-smi', '--format=csv,noheader', '--query-gpu='+field, '-i', bus]).splitlines()
+    return line
+
+def temperature(bus):
+    return int(query(bus, 'temperature.gpu'))
+
+def config(bus):
+    """Writes out the X server config for a GPU to a temporary directory"""
+    tempdir = mkdtemp(prefix='cool-gpu-' + bus)
+    edid = os.path.join(tempdir, 'edid.bin')
+    conf = os.path.join(tempdir, 'xorg.conf')
+
+    with open(edid, 'wb') as e, open(conf, 'w') as c:
+        e.write(EDID)
+        c.write(XORG_CONF.format(edid=edid, bus=decimalize(bus)))
+
+    return conf
+
+def xserver(display, bus):
+    """Starts the X server for a GPU under a certain display ID"""
+    conf = config(bus)
+    xorgargs = ['Xorg', display, '-once', '-config', conf]
+    print('Starting xserver: '+' '.join(xorgargs))
+    p = Popen(xorgargs)
+    if args.verbose:
+        print('Started xserver')
+    return p
+
+def xserver_pids():
+    return list(map(int, log_output(['pgrep', 'Xorg'], ok=(0, 1)).splitlines()))
+
+def kill_xservers():
+    """If there are already X servers attach to the GPUs, they'll stop us from setting up our own. Right now we
+    can't make use of existing X servers for the reasons detailed here https://github.com/andyljones/coolgpus/issues/1
+    """
+    servers = xserver_pids()
+    if servers:
+        if args.kill:
+            print('Killing all running X servers, including ' + ", ".join(map(str, servers)))
+            log_output(['pkill', '-9', 'Xorg'], ok=(0, 1))
+            for _ in range(10):
+                if xserver_pids():
+                    print('Awaiting X server shutdown')
+                    time.sleep(1)
+                else:
+                    print('All X servers killed')
+                    return
+            raise IOError('Failed to kill existing X servers. Try killing them yourself before running this script')
+        else:
+            raise IOError('There are already X servers active. Either run the script with the `--kill` switch, or kill them yourself first')
+    else:
+        print('No existing X servers, we\'re good to go')
+        return
+
+@contextmanager
+def xservers(buses):
+    """A context manager for launching an X server for each GPU in a list. Yields the mapping from bus ID to
+    display ID, and cleans up the X servers on exit."""
+    kill_xservers()
+    displays, servers = {}, {}
+    try:
+        for d, bus in enumerate(buses):
+            displays[bus] = ':' + str(d)
+            servers[bus] = xserver(displays[bus], bus)
+        yield displays
+    finally:
+        for bus, server in servers.items():
+            print('Terminating xserver for display ' + displays[bus])
+            server.terminate()
+
+def determine_segment(t):
+    '''Determines which piece (segment) of a user-specified piece-wise function
+    t belongs to. For example:
+        args.temp = [30, 50, 70, 90]
+        (segment 0) 30 (0 segment) 50 (1 segment) 70 (2 segment) 90 (segment 2)
+        args.speed = [10, 30, 50, 75]
+        (segment 0) 10 (0 segment) 30 (1 segment) 50 (2 segment) 75 (segment 2)'''
+    # TODO: assert temps and speeds are sorted
+    # the loop exits when:
+    #   a) t is less than the min temp (returns: segment 0)
+    #   b) t belongs to a segment (returns: the segment)
+    #   c) t is higher than the max temp (return: the last segment)
+    segments = zip(
+            args.temp[:-1], args.temp[1:],
+            args.speed[:-1], args.speed[1:])
+    for temp_a, temp_b, speed_a, speed_b in segments:
+        if t < temp_a:
+            break
+        if temp_a <= t < temp_b:
+            break
+    return temp_a, temp_b, speed_a, speed_b
+
+def min_speed(t):
+    temp_a, temp_b, speed_a, speed_b = determine_segment(t)
+    load = (t - temp_a)/float(temp_b - temp_a)
+    return int(min(max(speed_a + (speed_b - speed_a)*load, speed_a), speed_b))
+
+def max_speed(t):
+    return min_speed(t + T_HYST)
+
+def target_speed(s, t):
+    l, u = min_speed(t), max_speed(t)
+    return min(max(s, l), u), l, u
+
+def assign(display, command):
+    # Our duct-taped-together xorg.conf leads to some innocent - but voluminous - warning messages about
+    # failing to authenticate. Here we dispose of them
+    log_output(['nvidia-settings', '-a', command, '-c', display])
+
+
+def set_speed(display, target):
+    # toggle all fans
+    output = log_output(['nvidia-settings', '-q', 'fans', '-c', 'display'])
+    fans = int(re.search(r"^([0-9].*)\sFan", output.strip().split("\n")[0]).group(1))
+
+    for fanId in range(fans):
+        assign(display, f'[fan:{fanId}]/GPUTargetFanSpeed='+str(int(target)))
+
+def manage_fans(displays):
+    """Launches an X server for each GPU, then continually loops over the GPU fans to set their speeds according
+    to the GPU temperature. When interrupted, it releases the fan control back to the driver and shuts down the
+    X servers"""
+    output = log_output(['nvidia-settings', '-q', 'gpus', '-c', 'display'])
+    gpus = int(re.search(r"^([0-9].*)\sGPU", output.strip().split("\n")[0]).group(1))
+
+    try:
+        # turn on all gpu fans speed control
+        for bus, display in displays.items():
+            for gpuId in range(gpus): assign(display, f'[gpu:{gpuId}]/GPUFanControlState=1')
+            print('Gain fan speed control for GPU at DISPLAY'+display)
+        speeds = {b: 0 for b in displays}
+        while True:
+            for bus, display in displays.items():
+                temp = temperature(bus)
+                s, l, u = target_speed(speeds[bus], temp)
+                if s != speeds[bus]:
+                    print('GPU {}, {}C -> [{}%-{}%]. Setting speed to {}%'.format(display, temp, l, u, s))
+                    set_speed(display,  s)
+                    speeds[bus] = s
+                else:
+                    print('GPU {}, {}C -> [{}%-{}%]. Leaving speed at {}%'.format(display, temp, l, u, s))
+            time.sleep(5)
+    finally:
+        # release all gpu fans speed control
+        for bus, display in displays.items():
+            for gpuId in range(gpus): assign(display, f'[gpu:{gpuId}]/GPUFanControlState=0')
+            print('Released fan speed control for GPU at DISPLAY'+display)
+
+def debug_loop(displays):
+    displays = '\n'.join(str(d) + ' - ' + str(b) for b, d in displays.items())
+    print('\n\n\nLOOPING IN DEBUG MODE. DISPLAYS ARE:\n' + displays + '\n\n\n')
+    while True:
+        print('Looping in debug mode')
+        time.sleep(5)
+
+
+def run():
+    buses = gpu_buses()
+    with xservers(buses) as displays:
+        if args.debug:
+            debug_loop(displays)
+        else:
+            manage_fans(displays)
+
+if __name__ == '__main__':
+    run()
