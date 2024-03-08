@@ -3,11 +3,11 @@ from utils.yaml_parser import parse_yaml
 start_temperature = 50
 
 temperature_points = \
-    [40, 50, 60, 72]
+    [30, 50, 60, 70]
 speeds = \
     [30, 60, 80, 100]
 
-time_interval = 5
+time_interval = 10
 
 
 def read_config(yaml_path: str):
@@ -46,4 +46,4 @@ def read_config(yaml_path: str):
 
 
 if __name__ == '__main__':
-    read_config('./config.yaml')
+    read_config('config.yaml')

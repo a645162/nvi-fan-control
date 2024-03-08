@@ -94,9 +94,6 @@ class TemperatureMonitorThread(threading.Thread):
                         self.device_name
                     )
                 )
-                if self.fanSpeedLiner.new_temperature(now_temperature):
-                    new_speed: int = self.fanSpeedLiner.current_speed
-                    set_fan_speed(self.device_index, new_speed)
             elif not is_need_control and self.controlling:
                 self.controlling = False
                 print(
@@ -106,6 +103,18 @@ class TemperatureMonitorThread(threading.Thread):
                     )
                 )
                 restore_auto_mode(self.device_index)
+
+            if is_need_control:
+                if self.fanSpeedLiner.new_temperature(now_temperature):
+                    new_speed: int = self.fanSpeedLiner.current_speed
+                    set_fan_speed(self.device_index, new_speed)
+                    print(
+                        "[{}]{}C->{}%".format(
+                            self.device_index,
+                            now_temperature,
+                            new_speed
+                        )
+                    )
 
             time_sleep(self.time_interval)
 

@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="NVIDIA-Fan-Control",
+    name="nvidia_fan_control",
     version="0.1",
     description="NVIDIA GPU fan control for Linux",
     url="https://github.com/a645162/nvidia-fan-control",
@@ -12,10 +12,9 @@ setup(
     install_requires=[  # 依赖的库列表
         "nvitop",
     ],
-    entry_points={  # 如果你的项目有命令行工具，可以在这里设置
+    entry_points={
         "console_scripts": [
-            "nvidia-fan-control = your_package.main:main",  # 示例，请替换成实际的入口点
+            "nvidia_fan_control = nvidia_fan_control.main:main",
         ],
     },
-    scripts=["scripts/your_script.py"],  # 可执行脚本，如果需要的话
 )
