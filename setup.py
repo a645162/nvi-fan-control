@@ -11,6 +11,8 @@ setup(
     packages=find_packages(),  # 自动找到项目中的所有包
     install_requires=[  # 依赖的库列表
         "nvitop",
+        "chardet",
+        "PyYaml"
     ],
     entry_points={
         "console_scripts": [

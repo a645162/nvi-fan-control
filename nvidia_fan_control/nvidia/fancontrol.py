@@ -1,5 +1,7 @@
-from utils.command import do_command
-from algorithm.fan_speed import get_speed_by_float
+# -*- coding: utf-8 -*-
+
+from nvidia_fan_control.utils.command import do_command
+from nvidia_fan_control.algorithm.fan_speed import get_speed_by_float
 
 
 def nvidia_setting_command(command: str):

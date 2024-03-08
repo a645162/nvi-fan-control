@@ -1,2 +1,3 @@
 nvitop
 PyYaml
+chardet

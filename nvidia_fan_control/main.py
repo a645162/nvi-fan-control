@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from nvidia_fan_control.monitor.temperature_monitor import start_temperature_monitor
 
 
