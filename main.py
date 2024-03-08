@@ -1,4 +1,6 @@
-from nvidia.fancontrol import set_fan_speed, restore_auto_mode, test_speed_control
+from monitor.temperature_monitor import start_temperature_monitor
 
-if __name__=='__main__':
-    test_speed_control()
+if __name__ == '__main__':
+    print("NVIDIA GPU Temperature Monitor")
+
+    start_temperature_monitor()

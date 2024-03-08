@@ -10,16 +10,17 @@ def get_speed_by_float(speed: float) -> int:
     return int(speed)
 
 
-from typing import List
-
-
 class FanSpeedLiner:
+    current_speed: int
+
     def __init__(self, temperature_points: List[int], speeds: List[int]):
         if len(temperature_points) != len(speeds):
             raise ValueError("The length of temperature_points and speeds must be the same.")
 
         self.min_speed = 30
         self.max_speed = 100
+
+        self.current_speed = 0
 
         self.temperature_points = sorted(temperature_points)
         self.speeds = [max(self.min_speed, min(speed, self.max_speed)) for speed in speeds]
@@ -38,6 +39,18 @@ class FanSpeedLiner:
                 )
                 interpolated_speed = self.speeds[i] + slope * (temperature - self.temperature_points[i])
                 return max(self.min_speed, min(int(interpolated_speed), self.max_speed))
+
+    def get_final_speed(self, temperature: int) -> int:
+        """Get final speed by temperature."""
+        return get_speed_by_float(self.get_speed(temperature))
+
+    def new_temperature(self, temperature: int) -> bool:
+        new_speed = self.get_final_speed(temperature)
+        if self.current_speed != new_speed:
+            self.current_speed = new_speed
+            return True
+        else:
+            return False
 
 
 if __name__ == '__main__':
