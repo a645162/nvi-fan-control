@@ -29,3 +29,5 @@ def test_speed_control():
 
 if __name__ == "__main__":
     print("NVIDIA Fan Control Test")
+
+    test_speed_control()

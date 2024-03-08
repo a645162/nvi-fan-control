@@ -1,0 +1,10 @@
+# 开始接管的温度
+start_temperature: 50
+
+# 温度
+temperature_points:
+  [ 40, 50, 60, 72 ]
+# 每个温度点的风扇转速
+speeds:
+  [ 30, 60, 80, 100 ]
+  
