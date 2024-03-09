@@ -4,6 +4,19 @@
 
 Control NVIDIA GPU Fans.
 
+## Usage
+
+```bash
+pip install nvifan
+```
+
+## Build
+
+```bash
+chmod +x install.sh
+./install.sh
+```
+
 ## Ref
 
 Based on [CoolGPUs]().
