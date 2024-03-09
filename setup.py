@@ -1,9 +1,17 @@
 from setuptools import setup, find_packages
 
+# read the contents of your README file
+from pathlib import Path
+
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
+
 setup(
     name="nvifan",
-    version="0.2.0",
+    version="0.2.1",
     description="NVIDIA GPU fan control for Linux",
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     url="https://github.com/a645162/nvidia-fan-control",
     author="Haomin Kong",
     author_email="a645162@gmail.com",
