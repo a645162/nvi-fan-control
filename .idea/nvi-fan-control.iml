@@ -3,6 +3,10 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/.idea/copilot/chatSessions" />
+      <excludeFolder url="file://$MODULE_DIR$/Ref/hellojixian-coolgpus-master-fix-mult" />
+      <excludeFolder url="file://$MODULE_DIR$/build" />
+      <excludeFolder url="file://$MODULE_DIR$/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/nvifan.egg-info" />
     </content>
     <orderEntry type="jdk" jdkName="nvitop" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -15,7 +15,7 @@ long_description = long_description.replace(
 
 setup(
     name="nvifan",
-    version="0.2.2",
+    version="1.0.0",
     description="NVIDIA GPU fan control for Linux",
     long_description=long_description,
     long_description_content_type='text/markdown',
