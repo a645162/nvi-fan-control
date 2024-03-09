@@ -151,8 +151,7 @@ def start_temperature_monitor() -> bool:
     for thread in thread_list:
         thread.join()
 
-    if len(thread_list) == 0:
-        return False
+    return len(thread_list) != 0
 
 
 if __name__ == "__main__":
