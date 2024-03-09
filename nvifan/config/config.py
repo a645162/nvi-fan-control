@@ -1,22 +1,51 @@
 # -*- coding: utf-8 -*-
 
+import argparse
 from nvifan.utils.yaml_parser import parse_yaml
 
-start_temperature = 50
+parser = argparse.ArgumentParser(description='Command line argument parser')
+parser.add_argument(
+    '--start_temperature', '-s', type=int, default=50,
+    help='Starting temperature'
+)
 
-temperature_points = \
-    [30, 50, 60, 70]
-speeds = \
-    [30, 60, 80, 100]
+parser.add_argument(
+    '--temperature_points', '-t', nargs='+', type=int,
+    default=[30, 50, 60, 70],
+    help='List of temperature points'
+)
 
-time_interval = 10
+parser.add_argument(
+    '--speeds', '-v', nargs='+', type=int,
+    default=[30, 60, 80, 100],
+    help='List of speeds'
+)
+
+parser.add_argument(
+    '--time_interval', '-i', type=int, default=10,
+    help='Time interval'
+)
+
+parser.add_argument(
+    '--yaml', '-y', type=str, default="",
+    help='YAML config file path'
+)
+
+args = parser.parse_args()
+
+yaml_file_path = args.yaml.strip()
+
+start_temperature = args.start_temperature
+temperature_points = args.temperature_points
+speeds = args.speeds
+time_interval = args.time_interval
 
 
 def read_config(yaml_path: str):
     yaml_dict: dict = parse_yaml(yaml_path)
     print(yaml_dict)
 
-    global start_temperature, temperature_points, speeds
+    global start_temperature, temperature_points, speeds, time_interval
 
     if 'start_temperature' in yaml_dict:
         start_temperature = yaml_dict['start_temperature']
@@ -36,16 +65,20 @@ def read_config(yaml_path: str):
             raise ValueError('speeds should be a list')
 
     if 'time_interval' in yaml_dict:
-        time_interval = yaml_dict['time_interval']
-        if not isinstance(time_interval, int):
-            if isinstance(time_interval, str):
+        new_time_interval = yaml_dict['time_interval']
+        if not isinstance(new_time_interval, int):
+            if isinstance(new_time_interval, str):
                 try:
-                    time_interval = int(time_interval)
+                    time_interval = int(new_time_interval)
                 except:
                     raise ValueError('time_interval should be a int')
             else:
                 raise ValueError('time_interval should be a int')
 
+
+if len(yaml_file_path) > 0:
+    print("Read configure from file: ", yaml_file_path)
+    read_config(yaml_file_path)
 
 if __name__ == '__main__':
     read_config('config.yaml')

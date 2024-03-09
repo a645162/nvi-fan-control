@@ -1,2 +1,2 @@
-rm -rf build/
-rm -rf nvifan.edd-info/
+rm -rf ./build/
+rm -rf ./nvifan.egg-info/
