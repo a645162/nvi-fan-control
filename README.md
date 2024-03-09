@@ -39,6 +39,16 @@ nvifan
 * You can use `nvifan --help` to see the usage.
 * You can use `screen` or `tmux` to keep the program running when you close the terminal.
 
+### Upgrade
+
+We recommend using the official PyPI repository to upgrade the package.
+The third party PyPI mirrors are used to improve the download speed.
+But may an older version,so you can use this command to upgrade to the latest version.
+
+```bash
+pip install --upgrade nvifan -i https://pypi.python.org/simple
+```
+
 ### Install as Service
 
 #### Install
