@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import os
+
 from nvifan.utils.yaml_parser import parse_yaml
 
 parser = argparse.ArgumentParser(description='Command line argument parser')
@@ -27,7 +29,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '--yaml', '-y', type=str, default="",
+    '--yaml', '-y', type=str, default="/etc/nvifan.yaml",
     help='YAML config file path'
 )
 
@@ -76,9 +78,26 @@ def read_config(yaml_path: str):
                 raise ValueError('time_interval should be a int')
 
 
-if len(yaml_file_path) > 0:
+if len(yaml_file_path) > 0 and os.path.exists(yaml_file_path):
     print("Read configure from file: ", yaml_file_path)
     read_config(yaml_file_path)
 
+
+def save_yaml(path: str):
+    conf_dict: dict = {
+        'start_temperature': start_temperature,
+        'temperature_points': temperature_points,
+        'speeds': speeds,
+        'time_interval': time_interval
+    }
+    # Convert Dict to Yaml
+    import yaml
+    yaml_str = yaml.dump(conf_dict)
+    # Write to file
+    with open(path, 'w', encoding='utf-8') as file:
+        file.write(yaml_str)
+
+
 if __name__ == '__main__':
-    read_config('config.yaml')
+    read_config('config_template.yaml')
+    save_yaml('config_save.yaml')

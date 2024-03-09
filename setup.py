@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="nvifan",
-    version="0.1",
+    version="0.2.0",
     description="NVIDIA GPU fan control for Linux",
     url="https://github.com/a645162/nvidia-fan-control",
     author="Haomin Kong",
@@ -17,6 +17,8 @@ setup(
     entry_points={
         "console_scripts": [
             "nvifan = nvifan.main:main",
+            "nvifan-install = nvifan.tools.installer:install",
+            "nvifan-uninstall = nvifan.tools.installer:uninstall",
         ],
     },
 )

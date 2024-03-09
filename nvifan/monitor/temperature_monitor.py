@@ -124,7 +124,7 @@ class TemperatureMonitorThread(threading.Thread):
             time_sleep(self.time_interval)
 
 
-def start_temperature_monitor():
+def start_temperature_monitor() -> bool:
     device_list = get_device_list()
 
     for device in device_list:
@@ -150,6 +150,9 @@ def start_temperature_monitor():
 
     for thread in thread_list:
         thread.join()
+
+    if len(thread_list) == 0:
+        return False
 
 
 if __name__ == "__main__":
