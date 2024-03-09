@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import threading
+
+from nvitop import NaType
+
 from nvifan.nvi.device_list import *
 from nvifan.config import config
 from time import sleep as time_sleep
@@ -125,6 +128,16 @@ def start_temperature_monitor():
     device_list = get_device_list()
 
     for device in device_list:
+        if isinstance(device.fan_speed(), NaType):
+            print(
+                "[{}]{} does not have Fan!(Pass)".format(
+                    get_device_index(device),
+                    get_device_name(device)
+                )
+            )
+
+            continue
+
         thread = TemperatureMonitorThread(
             device,
             config.start_temperature,

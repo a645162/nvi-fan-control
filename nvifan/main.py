@@ -4,7 +4,7 @@ from nvifan.monitor.temperature_monitor import start_temperature_monitor
 
 
 def main():
-    print("NVIDIA GPU Temperature Monitor")
+    print("NVIDIA GPU Temperature Monitor and Fan Auto Control for Linux")
 
     start_temperature_monitor()
 
