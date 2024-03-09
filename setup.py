@@ -6,9 +6,16 @@ from pathlib import Path
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
+url_github_main_readme_zh_cn = \
+    r'https://github.com/a645162/nvi-fan-control/blob/main/README.zh-CN.md'
+long_description.replace(
+    "(README.zh-CN.md)",
+    f"({url_github_main_readme_zh_cn})"
+)
+
 setup(
     name="nvifan",
-    version="0.2.1",
+    version="0.2.2",
     description="NVIDIA GPU fan control for Linux",
     long_description=long_description,
     long_description_content_type='text/markdown',
