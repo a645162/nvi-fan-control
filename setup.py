@@ -8,7 +8,7 @@ long_description = (this_directory / "README.md").read_text()
 
 url_github_main_readme_zh_cn = \
     r'https://github.com/a645162/nvi-fan-control/blob/main/README.zh-CN.md'
-long_description.replace(
+long_description = long_description.replace(
     "(README.zh-CN.md)",
     f"({url_github_main_readme_zh_cn})"
 )
