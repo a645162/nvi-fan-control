@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import threading
-from nvidia_fan_control.nvidia.device_list import *
-from nvidia_fan_control.config import config
+from nvifan.nvi.device_list import *
+from nvifan.config import config
 from time import sleep as time_sleep
 from typing import List
-from nvidia_fan_control.algorithm.fan_speed import FanSpeedLiner
-from nvidia_fan_control.nvidia.fancontrol import set_fan_speed, restore_auto_mode
+from nvifan.algorithm.fan_speed import FanSpeedLiner
+from nvifan.nvi.fan_control import set_fan_speed, restore_auto_mode
 
 thread_list: List[threading.Thread] = []
 

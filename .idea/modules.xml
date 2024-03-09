@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/nvidia-fan-control.iml" filepath="$PROJECT_DIR$/.idea/nvidia-fan-control.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/nvi-fan-control.iml" filepath="$PROJECT_DIR$/.idea/nvi-fan-control.iml" />
     </modules>
   </component>
 </project>

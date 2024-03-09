@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from nvidia_fan_control.utils.yaml_parser import parse_yaml
+from nvifan.utils.yaml_parser import parse_yaml
 
 start_temperature = 50
 
