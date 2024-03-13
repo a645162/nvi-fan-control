@@ -2,13 +2,15 @@
 
 import threading
 
-from nvitop import NaType
+from nvitop import NaType, CudaDevice
 
-from nvifan.nvi.device_list import *
 from nvifan.config import config
 from time import sleep as time_sleep
 from typing import List
 from nvifan.algorithm.fan_speed import FanSpeedLiner
+
+from nvifan.nvi.device_list import get_device_name, get_device_index, get_device_list, get_temperature
+
 from nvifan.nvi.fan_control import set_fan_speed, restore_auto_mode
 
 from nvifan.utils.logs import get_logger
