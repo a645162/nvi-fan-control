@@ -155,9 +155,7 @@ def start_temperature_monitor() -> bool:
         thread.join()
 
     logger.info(
-        "All Monitor Threads Stopped.".format(
-            get_device_index(device), get_device_name(device)
-        )
+        "All Monitor Threads Stopped."
     )
 
     return len(thread_list) != 0

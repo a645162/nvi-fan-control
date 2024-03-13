@@ -47,7 +47,7 @@ temperature_points = args.temperature_points
 speeds = args.speeds
 time_interval = args.time_interval
 
-
+# flake8: noqa
 def read_config(yaml_path: str):
     yaml_dict: dict = parse_yaml(yaml_path)
     print(yaml_dict)
