@@ -12,8 +12,6 @@ def nvidia_setting_command(command: str):
     if ret[0] != 0:
         logger.error(f"[{ret[0]}] {command}")
         logger.error(f"{ret[1]}")
-    else:
-        logger.info(f"[{ret[0]}] {command}")
 
 
 def set_fan_speed(fan_id: int, speed: float):

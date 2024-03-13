@@ -6,6 +6,8 @@ from setuptools import setup, find_packages
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
+__version__ = "1.2.0"
+
 url_github_main_readme_zh_cn = \
     r'https://github.com/a645162/nvi-fan-control/blob/main/README.zh-CN.md'
 long_description = long_description.replace(
@@ -15,7 +17,7 @@ long_description = long_description.replace(
 
 setup(
     name="nvifan",
-    version="1.1.0",
+    version=__version__,
     description="NVIDIA GPU fan control for Linux",
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -23,8 +25,9 @@ setup(
     author="Haomin Kong",
     author_email="a645162@gmail.com",
     license="GPLv3",
-    packages=find_packages(),  # 自动找到项目中的所有包
-    install_requires=[  # 依赖的库列表
+    packages=find_packages(),
+    python_requires=">=3.7",
+    install_requires=[
         "nvitop",
         "chardet",
         "PyYaml",
