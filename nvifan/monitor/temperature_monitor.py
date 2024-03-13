@@ -58,23 +58,25 @@ class TemperatureMonitorThread(threading.Thread):
 
         self.controlling = False
 
-        print(
+        logger.info(
             "[{}]{} Start temperature monitor".format(
                 self.device_index, self.device_name
             )
         )
-        print(
+        logger.info(
             "[{}]Start controlling temperature: {}".format(
                 self.device_index, self.start_temperature
             )
         )
-        print(
+        logger.info(
             "[{}]Temperature points: {}".format(
                 self.device_index, self.temperature_points
             )
         )
-        print("[{}]Speeds: {}".format(self.device_index, self.speeds))
-        print("[{}]Time interval: {}".format(self.device_index, self.time_interval))
+        logger.info("[{}]Speeds: {}".format(self.device_index, self.speeds))
+        logger.info(
+            "[{}]Time interval: {}".format(self.device_index, self.time_interval)
+        )
 
     def get_now_temperature(self):
         return get_temperature(self.device)
@@ -87,14 +89,14 @@ class TemperatureMonitorThread(threading.Thread):
 
             if is_need_control and not self.controlling:
                 self.controlling = True
-                print(
+                logger.info(
                     "[{}]{} Start controlling".format(
                         self.device_index, self.device_name
                     )
                 )
             elif not is_need_control and self.controlling:
                 self.controlling = False
-                print(
+                logger.info(
                     "[{}]{} Stop controlling".format(
                         self.device_index, self.device_name
                     )
@@ -105,8 +107,8 @@ class TemperatureMonitorThread(threading.Thread):
                 if self.fanSpeedLiner.new_temperature(now_temperature):
                     new_speed: int = self.fanSpeedLiner.current_speed
                     set_fan_speed(self.device_index, new_speed)
-                    print(
-                        "[{}]{}C->{}%".format(
+                    logger.info(
+                        "[{}] Temperature {}C -> Speed {}%".format(
                             self.device_index, now_temperature, new_speed
                         )
                     )
@@ -119,7 +121,7 @@ def start_temperature_monitor() -> bool:
 
     for device in device_list:
         if isinstance(device.fan_speed(), NaType):
-            print(
+            logger.exception(
                 "[{}]{} does not have Fan!(Pass)".format(
                     get_device_index(device), get_device_name(device)
                 )
@@ -134,11 +136,27 @@ def start_temperature_monitor() -> bool:
             config.speeds,
             config.time_interval,
         )
+        logger.info(
+            "[{}]{} Thread Created.".format(
+                get_device_index(device), get_device_name(device)
+            )
+        )
         thread.start()
+        logger.info(
+            "[{}]{} Thread Started.".format(
+                get_device_index(device), get_device_name(device)
+            )
+        )
         thread_list.append(thread)
 
     for thread in thread_list:
         thread.join()
+
+    logger.info(
+        "All Monitor Threads Stopped.".format(
+            get_device_index(device), get_device_name(device)
+        )
+    )
 
     return len(thread_list) != 0
 

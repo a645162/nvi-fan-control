@@ -16,5 +16,5 @@ logger = loguru.logger
 logger.add(log_path, retention="30 days")
 
 
-def get_logger() -> loguru.Logger:
+def get_logger() -> loguru.logger:
     return logger
