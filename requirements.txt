@@ -1,6 +1,7 @@
 nvitop
 PyYaml
 chardet
+loguru
 
 setuptools
 wheel

@@ -2,12 +2,18 @@
 
 from nvifan.utils.command import do_command
 from nvifan.algorithm.fan_speed import get_speed_by_float
+from nvifan.utils.logs import get_logger
+
+logger = get_logger()
 
 
 def nvidia_setting_command(command: str):
     ret = do_command(f"nvidia-settings -a {command} -c display")
     if ret[0] != 0:
-        print(ret[1])
+        logger.error(f"[{ret[0]}] {command}")
+        logger.error(f"{ret[1]}")
+    else:
+        logger.info(f"[{ret[0]}] {command}")
 
 
 def set_fan_speed(fan_id: int, speed: float):

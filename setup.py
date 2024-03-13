@@ -27,7 +27,8 @@ setup(
     install_requires=[  # 依赖的库列表
         "nvitop",
         "chardet",
-        "PyYaml"
+        "PyYaml",
+        "loguru"
     ],
     entry_points={
         "console_scripts": [

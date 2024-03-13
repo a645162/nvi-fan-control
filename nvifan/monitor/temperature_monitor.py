@@ -11,6 +11,10 @@ from typing import List
 from nvifan.algorithm.fan_speed import FanSpeedLiner
 from nvifan.nvi.fan_control import set_fan_speed, restore_auto_mode
 
+from nvifan.utils.logs import get_logger
+
+logger = get_logger()
+
 thread_list: List[threading.Thread] = []
 
 
@@ -31,12 +35,12 @@ class TemperatureMonitorThread(threading.Thread):
     controlling: bool
 
     def __init__(
-            self,
-            device: CudaDevice,
-            start_temperature: int,
-            temperature_points: List[int],
-            speeds: List[int],
-            time_interval: int
+        self,
+        device: CudaDevice,
+        start_temperature: int,
+        temperature_points: List[int],
+        speeds: List[int],
+        time_interval: int,
     ):
         threading.Thread.__init__(self)
 
@@ -56,31 +60,21 @@ class TemperatureMonitorThread(threading.Thread):
 
         print(
             "[{}]{} Start temperature monitor".format(
-                self.device_index,
-                self.device_name
+                self.device_index, self.device_name
             )
         )
         print(
             "[{}]Start controlling temperature: {}".format(
-                self.device_index,
-                self.start_temperature
+                self.device_index, self.start_temperature
             )
         )
         print(
             "[{}]Temperature points: {}".format(
-                self.device_index,
-                self.temperature_points
+                self.device_index, self.temperature_points
             )
         )
-        print(
-            "[{}]Speeds: {}".format(
-                self.device_index,
-                self.speeds
-            )
-        )
-        print(
-            "[{}]Time interval: {}".format(self.device_index, self.time_interval)
-        )
+        print("[{}]Speeds: {}".format(self.device_index, self.speeds))
+        print("[{}]Time interval: {}".format(self.device_index, self.time_interval))
 
     def get_now_temperature(self):
         return get_temperature(self.device)
@@ -95,16 +89,14 @@ class TemperatureMonitorThread(threading.Thread):
                 self.controlling = True
                 print(
                     "[{}]{} Start controlling".format(
-                        self.device_index,
-                        self.device_name
+                        self.device_index, self.device_name
                     )
                 )
             elif not is_need_control and self.controlling:
                 self.controlling = False
                 print(
                     "[{}]{} Stop controlling".format(
-                        self.device_index,
-                        self.device_name
+                        self.device_index, self.device_name
                     )
                 )
                 restore_auto_mode(self.device_index)
@@ -115,9 +107,7 @@ class TemperatureMonitorThread(threading.Thread):
                     set_fan_speed(self.device_index, new_speed)
                     print(
                         "[{}]{}C->{}%".format(
-                            self.device_index,
-                            now_temperature,
-                            new_speed
+                            self.device_index, now_temperature, new_speed
                         )
                     )
 
@@ -131,8 +121,7 @@ def start_temperature_monitor() -> bool:
         if isinstance(device.fan_speed(), NaType):
             print(
                 "[{}]{} does not have Fan!(Pass)".format(
-                    get_device_index(device),
-                    get_device_name(device)
+                    get_device_index(device), get_device_name(device)
                 )
             )
 
@@ -143,7 +132,7 @@ def start_temperature_monitor() -> bool:
             config.start_temperature,
             config.temperature_points,
             config.speeds,
-            config.time_interval
+            config.time_interval,
         )
         thread.start()
         thread_list.append(thread)
