@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
-__version__ = "1.2.1"
+__version__ = "1.2.3"
 
 url_github_main_readme_zh_cn = \
     r'https://github.com/a645162/nvi-fan-control/blob/main/README.zh-CN.md'
