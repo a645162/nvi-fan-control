@@ -18,7 +18,7 @@ long_description = long_description.replace(
 setup(
     name="nvifan",
     version=__version__,
-    description="NVIDIA GPU fan control for Linux",
+    description="A tool aimed at controlling NVIDIA GPU fans on Linux.",
     long_description=long_description,
     long_description_content_type='text/markdown',
     url="https://github.com/a645162/nvidia-fan-control",
