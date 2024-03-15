@@ -1,10 +1,6 @@
 nvitop
+
 PyYaml
 chardet
+
 loguru
-
-flake8
-pytest
-
-setuptools
-wheel

@@ -12,9 +12,10 @@ After=syslog.target
 [Service]
 ExecStart={}
 Restart=on-failure
-RestartSec=5s
+RestartSec=60s
 ExecStop=/bin/kill -2 $MAINPID
-KillMode=none
+KillMode=control-group
+TimeoutStopSec=300
 
 [Install]
 WantedBy=multi-user.target

@@ -1,23 +1,30 @@
 # -*- coding: utf-8 -*-
 
+from typing import List, Any
+import signal
+import sys
 import threading
+from time import sleep as time_sleep
 
 from nvitop import NaType, CudaDevice
 
+# Program Configure
 from nvifan.config import config
-from time import sleep as time_sleep
-from typing import List
+
+# Fan Control Algorithm
 from nvifan.algorithm.fan_speed import FanSpeedLiner
 
-from nvifan.nvi.device_list import get_device_name, get_device_index, get_device_list, get_temperature
+# Device Info
+from nvifan.nvi.device_list import get_device_name, get_device_index, get_temperature
+from nvifan.nvi.device_list import get_device_list
 
+# Device Control
 from nvifan.nvi.fan_control import set_fan_speed, restore_auto_mode
 
+# Program Logs
 from nvifan.utils.logs import get_logger
 
 logger = get_logger()
-
-thread_list: List[threading.Thread] = []
 
 
 class TemperatureMonitorThread(threading.Thread):
@@ -45,6 +52,8 @@ class TemperatureMonitorThread(threading.Thread):
         time_interval: int,
     ):
         threading.Thread.__init__(self)
+
+        self.continue_run = True
 
         self.device = device
         self.device_name = get_device_name(device)
@@ -80,11 +89,14 @@ class TemperatureMonitorThread(threading.Thread):
             "[{}]Time interval: {}".format(self.device_index, self.time_interval)
         )
 
+    def restore_current_to_auto_mode(self):
+        restore_auto_mode(self.device_index)
+
     def get_now_temperature(self):
         return get_temperature(self.device)
 
     def run(self):
-        while True:
+        while self.continue_run:
             now_temperature = self.get_now_temperature()
 
             is_need_control = now_temperature > self.start_temperature
@@ -103,19 +115,32 @@ class TemperatureMonitorThread(threading.Thread):
                         self.device_index, self.device_name
                     )
                 )
-                restore_auto_mode(self.device_index)
+                self.restore_current_to_auto_mode()
 
-            if is_need_control:
+            if is_need_control and self.continue_run:
                 if self.fanSpeedLiner.new_temperature(now_temperature):
                     new_speed: int = self.fanSpeedLiner.current_speed
                     set_fan_speed(self.device_index, new_speed)
-                    logger.info(
-                        "[{}] Temperature {}C -> Speed {}%".format(
-                            self.device_index, now_temperature, new_speed
-                        )
-                    )
+                    # logger.info(
+                    #     "[{}] Temperature {}C -> Speed {}%".format(
+                    #         self.device_index, now_temperature, new_speed
+                    #     )
+                    # )
 
             time_sleep(self.time_interval)
+
+
+thread_list: List[TemperatureMonitorThread] = []
+
+
+def signal_handler(signal: int, frame: Any) -> None:
+    logger.info("Received signal: {}".format(signal))
+    for thread in thread_list:
+        thread.continue_run = False
+        if hasattr(thread, "restore_current_to_auto_mode"):
+            thread.restore_current_to_auto_mode()
+
+    sys.exit(0)
 
 
 def start_temperature_monitor() -> bool:
@@ -151,12 +176,18 @@ def start_temperature_monitor() -> bool:
         )
         thread_list.append(thread)
 
+    # Register the signal handler
+    # Ctrl+C
+    signal.signal(signal.SIGINT, signal_handler)
+    # Terminate(Such as "systemctl stop nvifan")
+    signal.signal(signal.SIGTERM, signal_handler)
+
     for thread in thread_list:
         thread.join()
+        if hasattr(thread, "restore_current_to_auto_mode"):
+            thread.restore_current_to_auto_mode()
 
-    logger.info(
-        "All Monitor Threads Stopped."
-    )
+    logger.info("All Monitor Threads Stopped.")
 
     return len(thread_list) != 0
 

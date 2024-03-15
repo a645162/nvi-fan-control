@@ -17,7 +17,12 @@ def main():
 
     if not start_temperature_monitor():
         logger.error("No NVIDIA GPU found.")
-        exit(1)
+
+        # Exit with code 0 to prevent automatic restart on failure
+        exit(0)
+        # To ensure that the service exits gracefully
+        # to prevent automatic restart on failure
+        # and avoid repeated restarts that consume resources.
 
 
 if __name__ == "__main__":
