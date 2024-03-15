@@ -1,19 +1,27 @@
 # -*- coding: utf-8 -*-
+
+from typing import List, Any
 import signal
 import sys
 import threading
+from time import sleep as time_sleep
 
 from nvitop import NaType, CudaDevice
 
+# Program Configure
 from nvifan.config import config
-from time import sleep as time_sleep
-from typing import List, Any
+
+# Fan Control Algorithm
 from nvifan.algorithm.fan_speed import FanSpeedLiner
 
-from nvifan.nvi.device_list import get_device_name, get_device_index, get_device_list, get_temperature
+# Device Info
+from nvifan.nvi.device_list import get_device_name, get_device_index, get_temperature
+from nvifan.nvi.device_list import get_device_list
 
+# Device Control
 from nvifan.nvi.fan_control import set_fan_speed, restore_auto_mode
 
+# Program Logs
 from nvifan.utils.logs import get_logger
 
 logger = get_logger()

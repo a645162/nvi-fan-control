@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 
+# Command
 from nvifan.utils.command import do_command
+
+# fan speed
 from nvifan.algorithm.fan_speed import get_speed_by_float
+
+# Program Logs
 from nvifan.utils.logs import get_logger
 
 logger = get_logger()
