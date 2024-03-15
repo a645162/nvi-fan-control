@@ -44,12 +44,12 @@ class TemperatureMonitorThread(threading.Thread):
     controlling: bool
 
     def __init__(
-            self,
-            device: CudaDevice,
-            start_temperature: int,
-            temperature_points: List[int],
-            speeds: List[int],
-            time_interval: int,
+        self,
+        device: CudaDevice,
+        start_temperature: int,
+        temperature_points: List[int],
+        speeds: List[int],
+        time_interval: int,
     ):
         threading.Thread.__init__(self)
 
@@ -121,11 +121,11 @@ class TemperatureMonitorThread(threading.Thread):
                 if self.fanSpeedLiner.new_temperature(now_temperature):
                     new_speed: int = self.fanSpeedLiner.current_speed
                     set_fan_speed(self.device_index, new_speed)
-                    logger.info(
-                        "[{}] Temperature {}C -> Speed {}%".format(
-                            self.device_index, now_temperature, new_speed
-                        )
-                    )
+                    # logger.info(
+                    #     "[{}] Temperature {}C -> Speed {}%".format(
+                    #         self.device_index, now_temperature, new_speed
+                    #     )
+                    # )
 
             time_sleep(self.time_interval)
 
@@ -134,11 +134,11 @@ thread_list: List[TemperatureMonitorThread] = []
 
 
 def signal_handler(signal: int, frame: Any) -> None:
-    if signal == 2:
-        for thread in thread_list:
-            thread.continue_run = False
-            if hasattr(thread, 'restore_current_to_auto_mode'):
-                thread.restore_current_to_auto_mode()
+    logger.info("Received signal: {}".format(signal))
+    for thread in thread_list:
+        thread.continue_run = False
+        if hasattr(thread, "restore_current_to_auto_mode"):
+            thread.restore_current_to_auto_mode()
 
     sys.exit(0)
 
@@ -177,16 +177,17 @@ def start_temperature_monitor() -> bool:
         thread_list.append(thread)
 
     # Register the signal handler
+    # Ctrl+C
     signal.signal(signal.SIGINT, signal_handler)
+    # Terminate(Such as "systemctl stop nvifan")
+    signal.signal(signal.SIGTERM, signal_handler)
 
     for thread in thread_list:
         thread.join()
-        # if hasattr(thread, 'restore_current_to_auto_mode'):
-        #     thread.restore_current_to_auto_mode()
+        if hasattr(thread, "restore_current_to_auto_mode"):
+            thread.restore_current_to_auto_mode()
 
-    logger.info(
-        "All Monitor Threads Stopped."
-    )
+    logger.info("All Monitor Threads Stopped.")
 
     return len(thread_list) != 0
 
